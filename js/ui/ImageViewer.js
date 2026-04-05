@@ -3,42 +3,104 @@
  * Используется для взаимодействием блоком изображений
  * */
 class ImageViewer {
-  constructor( element ) {
-
+  constructor(element) {
+    this.element = element;
+    this.previewImg = element.querySelector('.six.wide.column img');
+    this.imagesRow = element.querySelector('.images-list .grid .row:first-of-type');
+    this.selectAllBtn = element.querySelector('.select-all');
+    this.sendBtn = element.querySelector('.send');
+    this.showUploadedBtn = element.querySelector('.show-uploaded-files');
+    this.registerEvents();
   }
 
-  /**
-   * Добавляет следующие обработчики событий:
-   * 1. Клик по изображению меняет класс активности у изображения
-   * 2. Двойной клик по изображению отображает изображаения в блоке предпросмотра
-   * 3. Клик по кнопке выделения всех изображений проверяет у всех ли изображений есть класс активности?
-   * Добавляет или удаляет класс активности у всех изображений
-   * 4. Клик по кнопке "Посмотреть загруженные файлы" открывает всплывающее окно просмотра загруженных файлов
-   * 5. Клик по кнопке "Отправить на диск" открывает всплывающее окно для загрузки файлов
-   */
-  registerEvents(){
+  registerEvents() {
+    this.imagesRow.addEventListener('dblclick', (e) => {
+      const img = e.target.closest('img');
+      if (img && this.imagesRow.contains(img)) {
+        this.previewImg.src = img.src;
+      }
+    });
 
+    this.imagesRow.addEventListener('click', (e) => {
+      const img = e.target.closest('img');
+      if (img && this.imagesRow.contains(img)) {
+        img.classList.toggle('selected');
+        this.checkButtonText();
+      }
+    });
+
+    this.selectAllBtn.addEventListener('click', () => {
+      const images = this.imagesRow.querySelectorAll('img');
+      const hasSelected = Array.from(images).some(img => img.classList.contains('selected'));
+      images.forEach(img => {
+        if (hasSelected) {
+          img.classList.remove('selected');
+        } else {
+          img.classList.add('selected');
+        }
+      });
+      this.checkButtonText();
+    });
+
+    this.showUploadedBtn.addEventListener('click', () => {
+      const modal = App.getModal('filePreviewer');
+      const content = modal.element.find('.content');
+      content.html('<i class="asterisk loading icon massive"></i>');
+      modal.open();
+      Yandex.getUploadedFiles((err, data) => {
+        if (err || !data || !data.items) {
+          alert('Ошибка получения файлов');
+          modal.close();
+          return;
+        }
+        modal.showImages(data.items);
+      });
+    });
+
+    this.sendBtn.addEventListener('click', () => {
+      const selectedImages = Array.from(this.imagesRow.querySelectorAll('img.selected')).map(img => img.src);
+      if (selectedImages.length === 0) return;
+      const modal = App.getModal('fileUploader');
+      modal.showImages(selectedImages);
+      modal.open();
+    });
   }
 
-  /**
-   * Очищает отрисованные изображения
-   */
   clear() {
-
+    this.imagesRow.innerHTML = '';
+    this.checkButtonText();
   }
 
-  /**
-   * Отрисовывает изображения.
-  */
   drawImages(images) {
-
+    if (images.length === 0) {
+      this.selectAllBtn.classList.add('disabled');
+    } else {
+      this.selectAllBtn.classList.remove('disabled');
+    }
+    for (let src of images) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'four wide column ui medium image-wrapper';
+      const img = document.createElement('img');
+      img.src = src;
+      wrapper.appendChild(img);
+      this.imagesRow.appendChild(wrapper);
+    }
+    this.checkButtonText();
   }
 
-  /**
-   * Контроллирует кнопки выделения всех изображений и отправки изображений на диск
-   */
-  checkButtonText(){
-
+  checkButtonText() {
+    const images = this.imagesRow.querySelectorAll('img');
+    const selected = Array.from(images).some(img => img.classList.contains('selected'));
+    if (selected) {
+      this.sendBtn.classList.remove('disabled');
+    } else {
+      this.sendBtn.classList.add('disabled');
+    }
+    const allSelected = images.length > 0 && Array.from(images).every(img => img.classList.contains('selected'));
+    if (allSelected) {
+      this.selectAllBtn.textContent = 'Снять выделение';
+    } else {
+      this.selectAllBtn.textContent = 'Выбрать всё';
+    }
   }
-
 }
