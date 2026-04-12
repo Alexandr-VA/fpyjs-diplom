@@ -6,7 +6,8 @@ class ImageViewer {
   constructor(element) {
     this.element = element;
     this.previewImg = element.querySelector('.six.wide.column img');
-    this.imagesRow = element.querySelector('.images-list .grid .row:first-of-type');
+    this.imagesRow = element.querySelector('.images-list .image-row') ||
+                     element.querySelector('.images-list .row:first-of-type');
     this.selectAllBtn = element.querySelector('.select-all');
     this.sendBtn = element.querySelector('.send');
     this.showUploadedBtn = element.querySelector('.show-uploaded-files');
@@ -48,8 +49,13 @@ class ImageViewer {
       content.html('<i class="asterisk loading icon massive"></i>');
       modal.open();
       Yandex.getUploadedFiles((err, data) => {
-        if (err || !data || !data.items) {
-          alert('Ошибка получения файлов');
+        if (err) {
+          alert(err.message); // информативное сообщение об ошибке
+          modal.close();
+          return;
+        }
+        if (!data.items || !Array.isArray(data.items)) {
+          alert('Ошибка: сервер вернул некорректные данные.');
           modal.close();
           return;
         }
@@ -77,7 +83,7 @@ class ImageViewer {
     } else {
       this.selectAllBtn.classList.remove('disabled');
     }
-    for (let src of images) {
+    for (const src of images) {
       const wrapper = document.createElement('div');
       wrapper.className = 'four wide column ui medium image-wrapper';
       const img = document.createElement('img');
@@ -91,11 +97,19 @@ class ImageViewer {
   checkButtonText() {
     const images = this.imagesRow.querySelectorAll('img');
     const selected = Array.from(images).some(img => img.classList.contains('selected'));
+
     if (selected) {
       this.sendBtn.classList.remove('disabled');
     } else {
       this.sendBtn.classList.add('disabled');
     }
+
+    if (images.length === 0) {
+      this.selectAllBtn.classList.add('disabled');
+    } else {
+      this.selectAllBtn.classList.remove('disabled');
+    }
+
     const allSelected = images.length > 0 && Array.from(images).every(img => img.classList.contains('selected'));
     if (allSelected) {
       this.selectAllBtn.textContent = 'Снять выделение';
