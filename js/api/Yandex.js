@@ -1,3 +1,8 @@
+/**
+ * Класс Yandex
+ * Используется для управления облаком.
+ * Имеет свойство HOST
+ * */
 class Yandex {
   static HOST = 'https://cloud-api.yandex.net/v1/disk';
 
