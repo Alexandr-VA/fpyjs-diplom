@@ -1,3 +1,7 @@
+/**
+ * Основная функция для совершения запросов по Yandex API.
+ * */
+
 const createRequest = (options = {}) => {
   const xhr = new XMLHttpRequest();
   let url = options.url;
