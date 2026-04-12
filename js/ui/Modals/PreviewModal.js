@@ -21,10 +21,10 @@ class PreviewModal extends BaseModal {
         icon.addClass('spinner loading');
         deleteBtn.addClass('disabled');
         Yandex.removeFile(path, (err) => {
-          if (!err) {
+          if (err === null) {
             container.remove();
           } else {
-            alert('Ошибка удаления');
+            alert(err.message); // информативное сообщение (например, "файл не найден")
             icon.removeClass('spinner loading');
             deleteBtn.removeClass('disabled');
           }
